@@ -32,7 +32,7 @@ function App() {
 
   // Fetch assets on load
   useEffect(() => {
-    fetch("http://localhost:5000/api/assets")
+    fetch(`${process.env.REACT_APP_API_BASE}/api/assets`)
       .then((res) => res.json())
       .then((data) => setAssets(data))
       .catch((err) => console.error("Failed to fetch assets:", err));
@@ -42,7 +42,7 @@ function App() {
     const numericValue = parseFloat(value);
     if (!name || isNaN(numericValue)) return;
 
-    fetch("http://localhost:5000/api/assets", {
+    fetch(`${process.env.REACT_APP_API_BASE}/api/assets`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name, value: numericValue }),

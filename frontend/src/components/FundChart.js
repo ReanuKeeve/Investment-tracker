@@ -24,8 +24,8 @@ useEffect(() => {
 
   const isFund = /^[0-9]+$/.test(code);
   const priceUrl = isFund
-    ? `http://localhost:5000/api/fund/${code}`
-    : `http://localhost:5000/api/stock/${code}`;
+    ? `${process.env.REACT_APP_API_BASE}/api/fund/${code}`
+    : `${process.env.REACT_APP_API_BASE}/api/stock/${code}`;
 
   const fetchPrice = () => {
     fetch(priceUrl)
@@ -52,6 +52,30 @@ useEffect(() => {
 
   // Cleanup interval on component unmount or code change
   return () => clearInterval(interval);
+}, [code]);
+
+useEffect(() => {
+  if (!code) return;
+
+  const isFund = /^[0-9]+$/.test(code);
+  const historyUrl = isFund
+    ? `${process.env.REACT_APP_API_BASE}/api/fund/${code}/history`
+    : `${process.env.REACT_APP_API_BASE}/api/stock/${code}/history`;
+
+  fetch(historyUrl)
+    .then((res) => {
+      if (!res.ok) throw new Error("Failed to fetch chart data");
+      return res.json();
+    })
+    .then((history) => {
+      setData(history);
+      setError(null);
+    })
+    .catch((err) => {
+      console.error(err);
+      setData([]);
+      setError("Could not load chart data.");
+    });
 }, [code]);
 
   // Render the component
