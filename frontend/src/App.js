@@ -62,7 +62,7 @@ function App() {
     <div style={{ padding: "2rem", maxWidth: "600px", margin: "0 auto" }}>
       <h1>Investment Tracker</h1>
 
-      <div style={{ marginBottom: "1rem" }}>
+      <div class='inputs' style={{ marginBottom: "1rem" }}>
         <input
           type="text"
           placeholder="Asset Name"

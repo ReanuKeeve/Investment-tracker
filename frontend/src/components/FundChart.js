@@ -19,51 +19,40 @@ export default function FundChart({ code }) {
   const isFund = /^[0-9]+$/.test(code);
 
   // useEffect runs whenever `code` changes
-  useEffect(() => {
-    if (!code) return;
+useEffect(() => {
+  if (!code) return;
 
-    // Decide which backend route to use for historical data
-    const historyUrl = isFund
-      ? `http://localhost:5000/api/fund/${code}/history`
-      : `http://localhost:5000/api/stock/${code}/history`;
+  const isFund = /^[0-9]+$/.test(code);
+  const priceUrl = isFund
+    ? `http://localhost:5000/api/fund/${code}`
+    : `http://localhost:5000/api/stock/${code}`;
 
-    // Fetch historical price/NAV data for chart
-    fetch(historyUrl)
-      .then((res) => {
-        if (!res.ok) throw new Error("Failed to fetch chart data");
-        return res.json();
-      })
-      .then((history) => {
-        setData(history);       // Store historical data
-        setError(null);         // Clear any error
-      })
-      .catch((err) => {
-        console.error(err);
-        setData([]);            // Clear data on error
-        setError("Could not load chart data."); // Set error message
-      });
-
-    // Decide which backend route to use for real-time price
-    const priceUrl = isFund
-      ? `http://localhost:5000/api/fund/${code}`
-      : `http://localhost:5000/api/stock/${code}`;
-
-    // Fetch the current price from backend
+  const fetchPrice = () => {
     fetch(priceUrl)
       .then((res) => {
         if (!res.ok) throw new Error("Failed to fetch price");
         return res.json();
       })
       .then((res) => {
-        setPrice(res.price);            // Set the price (number)
-        setUpdatedAt(res.updatedAt || null); // Set the update time if available
-        setName(res.name || code); // fallback to code if name missing
+        setPrice(res.price);
+        setUpdatedAt(res.updatedAt || null);
+        setName(res.name || code);
       })
       .catch(() => {
-        setPrice(null);         // Clear price on error
+        setPrice(null);
         setUpdatedAt(null);
       });
-  }, [code]);
+  };
+
+  // Initial fetch immediately
+  fetchPrice();
+
+  // Set interval to fetch every 5 seconds
+  const interval = setInterval(fetchPrice, 1000);
+
+  // Cleanup interval on component unmount or code change
+  return () => clearInterval(interval);
+}, [code]);
 
   // Render the component
   return (
