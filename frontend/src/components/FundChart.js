@@ -1,92 +1,82 @@
 import React, { useEffect, useState } from "react";
 import {
-  LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  CartesianGrid,
 } from "recharts";
 
-// Component to display chart and real-time price of a fund or stock
 export default function FundChart({ code }) {
-  // State to hold historical data for chart
   const [data, setData] = useState([]);
-
-  // State to hold real-time price and update time
   const [price, setPrice] = useState(null);
   const [updatedAt, setUpdatedAt] = useState(null);
-  const [name,  setName] = useState("");  // State to hold the name of the fund or stock
-  // Error state for display fallback
+  const [name, setName] = useState("");
   const [error, setError] = useState(null);
 
-  // Determine if the code is a fund (numeric only) or a stock (contains letters)
   const isFund = /^[0-9]+$/.test(code);
+  const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
-  // useEffect runs whenever `code` changes
-useEffect(() => {
-  if (!code) return;
+  useEffect(() => {
+    if (!code) return;
 
-  const isFund = /^[0-9]+$/.test(code);
-  const priceUrl = isFund
-    ? `${process.env.REACT_APP_API_BASE}/api/fund/${code}`
-    : `${process.env.REACT_APP_API_BASE}/api/stock/${code}`;
+    const fetchPrice = () => {
+      const priceUrl = isFund
+        ? `${API_BASE}/api/fund/${code}`
+        : `${API_BASE}/api/stock/${code}`;
 
-  const fetchPrice = () => {
-    fetch(priceUrl)
+      fetch(priceUrl)
+        .then((res) => {
+          if (!res.ok) throw new Error("Failed to fetch price");
+          return res.json();
+        })
+        .then((res) => {
+          setPrice(res.price);
+          setUpdatedAt(res.updatedAt || null);
+          setName(res.name || code);
+        })
+        .catch((err) => {
+          console.error("Price fetch error:", err);
+          setPrice(null);
+          setUpdatedAt(null);
+        });
+    };
+
+    fetchPrice();
+    const interval = setInterval(fetchPrice, 1000);
+    return () => clearInterval(interval);
+  }, [code]);
+
+  useEffect(() => {
+    if (!code) return;
+
+    const historyUrl = isFund
+      ? `${API_BASE}/api/fund/${code}/history`
+      : `${API_BASE}/api/stock/${code}/history`;
+
+    fetch(historyUrl)
       .then((res) => {
-        if (!res.ok) throw new Error("Failed to fetch price");
+        if (!res.ok) throw new Error("Failed to fetch historical data");
         return res.json();
       })
       .then((res) => {
-        setPrice(res.price);
-        setUpdatedAt(res.updatedAt || null);
-        setName(res.name || code);
+        setData(res); // Expected format: [{ date, value }]
       })
-      .catch(() => {
-        setPrice(null);
-        setUpdatedAt(null);
+      .catch((err) => {
+        console.error("History fetch error:", err);
+        setError("Could not load historical chart data");
+        setData([]);
       });
-  };
+  }, [code]);
 
-  // Initial fetch immediately
-  fetchPrice();
-
-  // Set interval to fetch every 5 seconds
-  const interval = setInterval(fetchPrice, 1000);
-
-  // Cleanup interval on component unmount or code change
-  return () => clearInterval(interval);
-}, [code]);
-
-useEffect(() => {
-  if (!code) return;
-
-  const isFund = /^[0-9]+$/.test(code);
-  const historyUrl = isFund
-    ? `${process.env.REACT_APP_API_BASE}/api/fund/${code}/history`
-    : `${process.env.REACT_APP_API_BASE}/api/stock/${code}/history`;
-
-  fetch(historyUrl)
-    .then((res) => {
-      if (!res.ok) throw new Error("Failed to fetch chart data");
-      return res.json();
-    })
-    .then((history) => {
-      setData(history);
-      setError(null);
-    })
-    .catch((err) => {
-      console.error(err);
-      setData([]);
-      setError("Could not load chart data.");
-    });
-}, [code]);
-
-  // Render the component
   return (
     <div style={{ padding: "2rem" }}>
-      <h2>Chart for {code}</h2>
+      <h2>Chart for {name || code}</h2>
 
-      {/* Show error if there's a problem */}
       {error && <p style={{ color: "red" }}>{error}</p>}
 
-      {/* Show chart if data is loaded */}
       {data.length > 0 ? (
         <>
           <ResponsiveContainer width="100%" height={300}>
@@ -95,11 +85,15 @@ useEffect(() => {
               <YAxis domain={["auto", "auto"]} />
               <Tooltip />
               <CartesianGrid strokeDasharray="3 3" />
-              <Line type="monotone" dataKey="value" stroke="#8884d8" strokeWidth={2} />
+              <Line
+                type="monotone"
+                dataKey="value"
+                stroke="#8884d8"
+                strokeWidth={2}
+              />
             </LineChart>
           </ResponsiveContainer>
 
-          {/* Show real-time price under the chart */}
           <div style={{ marginTop: "1rem" }}>
             <strong>Real-Time Price:</strong>{" "}
             {price ? (
