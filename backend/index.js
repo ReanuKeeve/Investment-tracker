@@ -3,7 +3,6 @@ const cors = require("cors");
 const allowedOrigins = ['https://assets-ctj8.onrender.com'];
 
 const app = express();
-app.use(cors());
 app.use(express.json());
 app.use(cors({
   origin: allowedOrigins,
