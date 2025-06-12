@@ -11,15 +11,15 @@ const corsOptions = {
 
 const app = express();
 
-// ✅ CORS before any other middleware or routes
+// Safe CORS config — only use once
 app.use(cors(corsOptions));
-app.options('*', cors(corsOptions));
+
 
 app.use(express.json());
 
-// Routes
+// Simple root route only
 app.get("/", (req, res) => {
-  res.send("Backend is running! You're great!");
+  res.send("Backend is running clean");
 });
 
 app.use("/api/assets", require("./routes/assets"));
