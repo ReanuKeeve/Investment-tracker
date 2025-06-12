@@ -1,20 +1,20 @@
 const express = require("express");
-const cors = require("cors");
+/* const cors = require("cors");
 
 const allowedOrigins = ['https://assets-ctj8.onrender.com'];
 
-const corsOptions = {
+const corsOptions = { 
   origin: allowedOrigins,
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   credentials: true
 };
 
-const app = express();
 
 // Safe CORS config — only use once
 app.use(cors(corsOptions));
+*/
 
-
+const app = express();
 app.use(express.json());
 
 // Simple root route only
